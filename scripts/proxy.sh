@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
-stack_ip=${1:-'192.168.125.5'}
+this=`basename "$0"`
+echo "Executing Script: $this"
 
-domain='hpcw.com'
+# VBox Fix
+sudo ln -s /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions /usr/lib/VBoxGuestAdditions
+
+stack_ip=${1:-'192.168.125.6'}
+domain='proxy.hpcw.com'
 
 # This is the parent script for all proxy scripts.
 # Using this script should provision the server from
@@ -47,7 +52,6 @@ sed -i /etc/selinux/config -r -e 's/^SELINUX=.*/SELINUX=disabled/g'
 yum -y install epel-release
 # Run all updates before starting, and apply new SELinux settings
 yum -y update
-# yum -y update && systemctl reboot   # Run all updates before starting, and apply new SELinux settings
 
 # nginx has some dependencies that are only available in the cr which requires yum-utils -.-
 yum -y install yum-utils
@@ -76,9 +80,9 @@ http {
   include  /etc/nginx/mime.types;
   default_type  application/octet-stream;
 
-  log_format  main '$remote_addr - $remote_user [$time_local] "$request" '
-              '$status $body_bytes_sent "$http_referer" '
-              '"$http_user_agent" "$http_x_forwarded_for"';
+  log_format  main '\$remote_addr - \$remote_user [\$time_local] "\$request" '
+              '\$status \$body_bytes_sent "\$http_referer" '
+              '"\$http_user_agent" "\$http_x_forwarded_for"';
 
   access_log  /var/log/nginx/access.log  main;
 
@@ -106,7 +110,7 @@ server  {
 
   listen  80;   # Redirect any port http/80 requests, to https/443 -- generally only matters for internal requests
   server_name  *.${domain};
-  return 301 https://$host$request_uri;
+  return 301 https://\$host\$request_uri;
 }
 
 server  {
@@ -114,7 +118,7 @@ server  {
   server_name ${domain};
   ssl  on;
   location  / {
-    return www.google.com;
+    proxy_pass http://www.google.com;
     #return  404;
   }
 }
@@ -200,12 +204,14 @@ server {
   client_max_body_size  256m;
   location  / {
     proxy_pass  http://internal_ip_to_stash:7990;
-    proxy_set_header  X-Forwarded-Host $host;
-    proxy_set_header  X-Forwarded-Server $host;
-    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header  X-Forwarded-Host \$host;
+    proxy_set_header  X-Forwarded-Server \$host;
+    proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
   }
 }
 EOL
+
+ln -s /etc/nginx/conf.d/reverseproxy.conf ~/reverseproxy.conf
 
 # Start nginx as system boot
 systemctl enable nginx.service

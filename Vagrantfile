@@ -8,11 +8,12 @@
 # Example Layout: https://github.com/debops/examples/blob/master/vagrant-multi-machine/Vagrantfile
 
 # Config
-RAM     = '1024'  # Default memory size in MB
-DOMAIN  = ".hpcw.com"
-NETWORK = "192.168.125."
-NETMASK = "255.255.255.0"
-BOX     = 'centos71-nocm-0.0.1.box'
+RAM       = '1024'  # Default memory size in MB
+DOMAIN    = ".hpcw.com"
+NETWORK   = "192.168.125."
+NETMASK   = "255.255.255.0"
+BOX       = 'centos71-nocm-0.0.1.box'
+STACK_IP  = NETWORK+'6'
 
 HOSTS = [
   {
@@ -23,14 +24,16 @@ HOSTS = [
     :box    => BOX,
     :ports  => [
       {:g => 443, :h => 8443 },
-      {:g => 80, :h => 8080 }
-    ] 
+      # {:g => 80, :h => 8080 }
+    ],
+    # Alternative :( DNS: http://awesomeprogrammer.com/blog/2014/12/07/vagrant-setup-for-multiple-subdomains-application/
+    :host_alias => 'proxy.hpcw.com sab.proxy.hpcw.com guac.proxy.hpcw.com', 
   },
   {
     :name   => 'stack',
     :cpu    => '1',
     :mem    => RAM,
-    :eth1   => NETWORK+'6',
+    :eth1   => STACK_IP,
     :box    => BOX,
     :ports  => [
       {:g => 8080, :h => 8080}, # sabnzbd
@@ -38,7 +41,8 @@ HOSTS = [
       {:g => 5050, :h => 5050}, # couchpotato
       {:g => 8181, :h => 8181}, # headphones
       {:g => 8989, :h => 8998}  # Sonarr
-    ]
+    ],
+    :host_alias => ''
    }
 ]
 
@@ -57,22 +61,23 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.vm.define opts[:name] do |config|
       config.vm.box       = opts[:box]    
       config.vm.hostname  = opts[:name] + DOMAIN
+      config.hostmanager.aliases = opts[:host_alias]
       config.vm.network :private_network, ip: opts[:eth1], netmask: NETMASK
       config.vm.provider :virtualbox do |v|
         v.customize ["modifyvm", :id, "--memory", opts[:mem]]
         v.customize ["modifyvm", :id, "--cpus", opts[:cpu]]
       end
       opts[:ports].each do |port|
-        config.vm.network :forwarded_port, guest:port[:g] , host: port[:h], auto_correct: true
+        config.vm.network :forwarded_port, guest: port[:g] , host: port[:h], auto_correct: true
       end
-    end
     
-    # Provisioning
-    config.vm.provision "shell", path: "scripts/#{opts[:name]}/#{opts[:name]}.sh", args: opts[:eth1]
-    # config.vm.provision :ansible do |ansible|
-    #   ansible.verbose = "v"                         # Tells vagrant to display ansible command used
-    #   ansible.playbook = "ansible/#{name}.yml"
-    # end
-    
+      # Provisioning
+      config.vm.provision "shell", path: "scripts/#{opts[:name]}.sh", args: STACK_IP
+      # config.vm.provision :ansible do |ansible|
+      #   ansible.verbose = "v"                         # Tells vagrant to display ansible command used
+      #   ansible.playbook = "ansible/#{name}.yml"
+      # end
+      
+    end # END define
   end # HOSTS-each
 end

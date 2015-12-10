@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+this=`basename "$0"`
+echo "Executing Script: $this"
+
+# VBox Fix
+sudo ln -s /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions /usr/lib/VBoxGuestAdditions
+
 #################################################
 #					TODO						#
 #################################################
@@ -10,17 +16,15 @@
 
 
 # Script installs the following software if set to true:
-install_sabnzdb=true
-
-install_couchpotato=true
-install_sickrage=true
-install_headphones=true
+install_sabnzbd=false
+install_guacamole=true
 
 install_couchpotato=false
 install_sickrage=false
-install_headphones=false
 
+install_headphones=false
 install_sonarr=false
+
 reboot=false
 
 #################################################
@@ -54,20 +58,23 @@ EOL
 yum -y install wget git par2cmdline p7zip unrar unzip python-yenc python-feedparser python-configobj python-cheetah python-dbus python-support
 # Install pyOpenSSL
 yum -y install ftp://ftp.muug.mb.ca/mirror/centos/7.1.1503/os/x86_64/Packages/pyOpenSSL-0.13.1-3.el7.x86_64.rpm
-yum -y update && reboot
+yum -y update
 
 
 
 #################################################
 #				SABNZDB INSTALL					#
 #################################################
-if [ install_sabnzdb == true ]; then
+if [ $install_sabnzbd == true ]; then
+	
 	# Create data dir for SABnzbd
 	mkdir -p /apps/data/.sabnzbd && cd /apps
 	
-	git clone https://github.com/sabnzbd/sabnzbd.git sabnzbd   # Download SABnzbd files
+	# Download SABnzbd files
+	git clone https://github.com/sabnzbd/sabnzbd.git sabnzbd
 	
-	chown -R usenet:usenet /apps   # Change ownership of SABnzbd files
+	# Change ownership of SABnzbd files
+	chown -R usenet:usenet /apps
 	
 	# Create systemd service script file
 	cat >/etc/systemd/system/sabnzbd.service <<EOL
@@ -97,7 +104,7 @@ fi
 #################################################
 #				SICKRAGE INSTALL				#
 #################################################
-if [ install_sickrage == true ]; then
+if [ $install_sickrage == true ]; then
 	# Create data dir for SickRage
 	mkdir -p /apps/data/.sickrage && cd /apps
 	# Download SickRage files
@@ -132,7 +139,7 @@ fi
 #################################################
 #				COUCHPOTATO INSTALL				#
 #################################################
-if [ install_couchpotato == true ]; then
+if [ $install_couchpotato == true ]; then
 	# Create data dir for CouchPotatoServer
 	mkdir -p /apps/data/.couchpotatoserver && cd /apps
 	# Download CouchPotatoServer files
@@ -167,7 +174,7 @@ fi
 #################################################
 #				HEADPHONES INSTALL				#
 #################################################
-if [ install_headphones == true ]; then
+if [ $install_headphones == true ]; then
 	# Create data dir for Headphones
 	mkdir -p /apps/data/.headphones && cd /apps
 	# Download Headphones files
@@ -203,7 +210,7 @@ fi
 #################################################
 #				SONARR INSTALL					#
 #################################################
-if [ install_sonarr == true ]; then
+if [ $install_sonarr == true ]; then
 	cat >/etc/yum.repos.d/mono.repo <<EOL
 [mono]
 name=mono for Centos 7 - Base
@@ -248,7 +255,98 @@ EOL
 	systemctl enable sonarr.service
 fi
 
+#################################################
+#				GUACAMOLE INSTAL				#
+#################################################
+# https://deviantengineer.com/2015/02/guacamole-centos7/
+if [ $install_guacamole == true ]; then
+	
+	# prerequisites
+	# EPEL Repo
+	rpm -Uvh http://mirror.metrocast.net/fedora/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+	yum -y install wget
+	# Felfert Repo
+	wget http://download.opensuse.org/repositories/home:/felfert/Fedora_19/home:felfert.repo && mv home\:felfert.repo /etc/yum.repos.d/
+	yum -y install tomcat libvncserver freerdp libvorbis libguac libguac-client-vnc libguac-client-rdp libguac-client-ssh
+	yum -y install cairo-devel pango-devel libvorbis-devel openssl-devel gcc pulseaudio-libs-devel libvncserver-devel terminus-fonts \
+	freerdp-devel uuid-devel libssh2-devel libtelnet libtelnet-devel tomcat-webapps tomcat-admin-webapps java-1.7.0-openjdk.x86_64
+	
+	# guacd install
+	mkdir ~/guacamole && cd ~/
+	wget http://sourceforge.net/projects/guacamole/files/current/source/guacamole-server-0.9.7.tar.gz
+	tar -xzf guacamole-server-0.9.7.tar.gz && cd guacamole-server-0.9.7
+	./configure --with-init-dir=/etc/init.d
+	make
+	make install
+	ldconfig
+	
+	# guacamole client
+	mkdir -p /var/lib/guacamole && cd /var/lib/guacamole/
+	wget http://sourceforge.net/projects/guacamole/files/current/binary/guacamole-0.9.7.war -O guacamole.war
+	ln -s /var/lib/guacamole/guacamole.war /var/lib/tomcat/webapps/
+	rm -rf /usr/lib64/freerdp/guacdr.so
+	ln -s /usr/local/lib/freerdp/guacdr.so /usr/lib64/freerdp/
+	
+	# mysql authentication
+	yum -y install mariadb mariadb-server
+	mkdir -p ~/guacamole/sqlauth && cd ~/guacamole/sqlauth
+	wget http://sourceforge.net/projects/guacamole/files/current/extensions/guacamole-auth-jdbc-0.9.7.tar.gz
+	tar -zxf guacamole-auth-jdbc-0.9.7.tar.gz
+	wget http://dev.mysql.com/get/Downloads/Connector/j/mysql-connector-java-5.1.32.tar.gz
+	tar -zxf mysql-connector-java-5.1.32.tar.gz
+	mkdir -p /usr/share/tomcat/.guacamole/{extensions,lib}
+	mv guacamole-auth-jdbc-0.9.7/mysql/guacamole-auth-jdbc-mysql-0.9.7.jar /usr/share/tomcat/.guacamole/extensions/
+	mv mysql-connector-java-5.1.32/mysql-connector-java-5.1.32-bin.jar /usr/share/tomcat/.guacamole/lib/
+	systemctl restart mariadb.service
+	
+	# # configure database
+	# mysqladmin -u root password password
+	# # Enter above password
+	# mysql -u root -p vagrant
+	# create database guacdb;
+	# create user 'guacuser'@'localhost' identified by 'guacDBpass';
+	# grant select,insert,update,delete on guacdb.* to 'guacuser'@'localhost';
+	# flush privileges;
+	# quit
+	
+	# configure database
+	mysqladmin -u root password password
+	Q1="create database guacdb;"
+	Q2="create user 'guacuser'@'localhost' identified by 'guacDBpass';"
+	Q3="grant select,insert,update,delete on guacdb.* to 'guacuser'@'localhost';"
+	Q4="FLUSH PRIVILEGES;"
+	SQL="${Q1}${Q2}${Q3}${Q4}"
+	mysql -u root -p password -e ${SQL}
+	
+	# extend database schema
+	cd ~/guacamole/sqlauth/guacamole-auth-jdbc-0.9.7/mysql/schema/
+	cat ./*.sql | mysql -u root -p guacdb   # Enter SQL root password set above
+	
+	# configure guacamole
+	mkdir -p /etc/guacamole/
+	cat >/etc/guacamole/guacamole.properties <<EOL
+# MySQL properties
+mysql-hostname: localhost
+mysql-port: 3306
+mysql-database: guacdb
+mysql-username: guacuser
+mysql-password: guacDBpass
+
+# Additional settings
+mysql-disallow-duplicate-connections: false	
+EOL
+	ln -s /etc/guacamole/guacamole.properties /usr/share/tomcat/.guacamole/
+	
+	# cleanup
+	cd ~ && rm -rf guacamole*
+	systemctl enable tomcat.service && systemctl enable mariadb.service && chkconfig guacd on
+	# systemctl reboot
+fi
+
+#################################################
+#				SCRIPT END						#
+#################################################
 # Reboot for all services to start ;)
-if [ reboot == true ]; then
+if [ $reboot == true ]; then
 	systemctl reboot
 fi
