@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+stack_ip=${1:-'192.168.125.5'}
+
+domain='hpcw.com'
+
 # This is the parent script for all proxy scripts.
 # Using this script should provision the server from
 # start to finish.
@@ -19,7 +23,7 @@ echo 'scripts ==> ssl ==> START'
 rm -rf /app/ssl
 mkdir -p /app/ssl
 cd /app/ssl
-# Generate a Private Key
+ # Generate a Private Key
 echo 'Generating key for domain...'
 openssl genrsa -des3 -passout pass:welcome1 -out server.key 2048 -noout
 # Remove Passphrase from Key
@@ -101,22 +105,23 @@ ssl_ciphers  AES256+EECDH:AES256+EDH:!aNULL;
 server  {
 
   listen  80;   # Redirect any port http/80 requests, to https/443 -- generally only matters for internal requests
-  server_name  *.domain.com;
+  server_name  *.${domain};
   return 301 https://$host$request_uri;
 }
 
 server  {
   listen  443 ssl;   # Return 404 page if requesting the root url; can set this to whatever you want, but I just leave this at a 404
-  server_name domain.com;
+  server_name ${domain};
   ssl  on;
   location  / {
-    return  404;
+    return www.google.com;
+    #return  404;
   }
 }
 
 server  {
   listen  443 ssl;   # Example config for SubSonic, browsable at https://subsonic.domain.com
-  server_name  subsonic.domain.com;
+  server_name  subsonic.${domain};
   ssl  on;
   location  / {
     proxy_pass  http://interal_ip_to_subsonic:4040/;
@@ -125,7 +130,7 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for OwnCloud, browsable at https://owncloud.domain.com
-  server_name  owncloud.domain.com;
+  server_name  owncloud.${domain};
   client_max_body_size  0;
   ssl  on;
   location  / {
@@ -135,16 +140,16 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for SABnzbd, browsable at https://sab.domain.com
-  server_name  sab.proxy.dev.hpcw.com;
+  server_name  sab.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://10.0.0.157:9090/;
+    proxy_pass  http://$stack_ip:8080/;
   }
 }
 
 server  {
   listen  443 ssl;   # Example config for SickRage, browsable at https://sr.domain.com
-  server_name  sr.domain.com;
+  server_name  sr.${domain};
   ssl  on;
   location  / {
     proxy_pass  http://interal_ip_to_sickrage:8081/;
@@ -153,7 +158,7 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for CouchPotatoServer, browsable https://cps.domain.com
-  server_name  cps.domain.com;
+  server_name  cps.${domain};
   ssl  on;
   location  / {
     proxy_pass  http://internal_ip_to_sickbeard:5050/;
@@ -162,7 +167,7 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for Headphones, browsable at https://hp.domain.com
-  server_name  hp.domain.com;
+  server_name  hp.${domain};
   ssl  on;
   location  / {
     proxy_pass  http://internal_ip_to_headphones:9090/;
@@ -171,7 +176,7 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for Guacamole, browsable at https://guac.domain.com/guacamole
-  server_name  guac.domain.com;
+  server_name  guac.${domain};
   ssl  on;
   location  / {
     proxy_buffering  off;
@@ -181,7 +186,7 @@ server  {
 
 server  {
   listen  443 ssl;   # Example config for Plex Media Server, browsable at https://pms.domain.com/web
-  server_name  pms.domain.com;
+  server_name  pms.${domain};
   ssl  on;
   location  / {
     proxy_pass  http://internal_ip_to_plex:32400/;
@@ -190,7 +195,7 @@ server  {
 
 server {
   listen  443 ssl;    # Example config for Stash, browsable at https://git.domain.com
-  server_name  git.domain.com;
+  server_name  git.${domain};
   ssl  on;
   client_max_body_size  256m;
   location  / {
@@ -215,7 +220,7 @@ firewall-cmd --permanent --add-service=https
 
 # Reboot
 echo 'Rebooting...'
-systemctl reboot
+# systemctl reboot
 
 # Don't forget to forward port 443 on your firewall,
 # and set up dns entries with your dns provider
