@@ -36,16 +36,17 @@ vm_check_status() {
 vm_start() {
 	name=$1
 	print "vm_start ==> Starting Box: $name"
-	vagrant up -p virtualbox $name
+	vagrant up --provider=virtualbox $name
 	print "vm_start ==> Box Started: $name"
 }
 
 vm_destroy() {
 	name=$1
-	running=$(vagrant status $name | grep "$name.*running") && return 0 || return 1
-	if [ $running == 0 ]; then
+	running=$(vagrant status $name | grep -ic "$name.*running")
+	echo "running is: $running"
+	if [ "$running" == '1' ]; then
 		print "vm_destroy ==> Destroying Box: $name"
-		vagrant box destroy -f $name
+		vagrant destroy -f $name
 		print "vm_destroy ==> Destroyed Box: $name"
 	fi
 }
@@ -58,7 +59,7 @@ vm_provision() {
 }
 
 check_installed() {
-	
+	name=$1
 }
 
 #####################################################
@@ -67,16 +68,16 @@ check_installed() {
 
 # This project requires the use of the Vagrant HostManager Plugin
 hostman_installed=$(vagrant plugin list | grep 'hostman*')
-if [ -z "$hostman_installed" ]; then      # -z: true if var is len 0
+if [ "$hostman_installed" == '1' ]; then
 	vagrant plugin install vagrant-hostmanager
 fi
 
 # Install Ansible
 installed=$(which ansible && echo $?)
-if [ $installed == '1' ]; then
+if [ "$installed" == '1' ]; then
 	# Check for brew
 	brew_installed=$(which brew && echo $?)
-	if [ $brew_installed == '1' ]; then
+	if [ "$brew_installed" == '1' ]; then
 		ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 	fi
 	brew install ansible
@@ -87,7 +88,7 @@ fi
 #####################################################
 
 # Template ansible.cfg
-if [ $replace_config == 1]; then
+if [ $replace_config == 1 ]; then
 	if [ ! -e 'ansible.cfg' ]; then
 		# Remove ansible.cfg
 		rm -f ansible.cfg
@@ -110,7 +111,7 @@ if [ $replace_roles == 1 ]; then
 fi
 
 print "Boxes are: $boxes"
-for box in $boxes; do
+for box in "$boxes"; do
 	vm_destroy $box
 	vm_start $box
 	vm_provision $box

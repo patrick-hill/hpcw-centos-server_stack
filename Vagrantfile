@@ -12,7 +12,7 @@ RAM       = '1024'  # Default memory size in MB
 DOMAIN    = ".hpcw.com"
 NETWORK   = "192.168.125."
 NETMASK   = "255.255.255.0"
-BOX       = 'centos71-nocm-0.0.1.box'
+BOX       = 'hpcw-centos71-nocm-0.0.1.box'
 STACK_IP  = NETWORK+'6'
 
 HOSTS = [
@@ -36,6 +36,7 @@ HOSTS = [
     :eth1   => STACK_IP,
     :box    => BOX,
     :ports  => [
+      {:g => 3389, :h => 3389}, # RDP-Windows
       {:g => 8080, :h => 8080}, # sabnzbd
       {:g => 8081, :h => 8081}, # sickrage
       {:g => 5050, :h => 5050}, # couchpotato

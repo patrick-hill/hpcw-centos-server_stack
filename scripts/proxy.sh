@@ -128,7 +128,7 @@ server  {
   server_name  subsonic.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://interal_ip_to_subsonic:4040/;
+    proxy_pass  http://$stack_ip:4040/;
   }
 }
 
@@ -138,7 +138,7 @@ server  {
   client_max_body_size  0;
   ssl  on;
   location  / {
-    proxy_pass  http://internal_ip_to_owncloud/;
+    proxy_pass  http://$stack_ip/;
   }
 }
 
@@ -156,7 +156,7 @@ server  {
   server_name  sr.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://interal_ip_to_sickrage:8081/;
+    proxy_pass  http://$stack_ip:8081/;
   }
 }
 
@@ -165,7 +165,7 @@ server  {
   server_name  cps.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://internal_ip_to_sickbeard:5050/;
+    proxy_pass  http://$stack_ip:5050/;
   }
 }
 
@@ -174,7 +174,7 @@ server  {
   server_name  hp.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://internal_ip_to_headphones:9090/;
+    proxy_pass  http://$stack_ip:9090/;
   }
 }
 
@@ -184,7 +184,7 @@ server  {
   ssl  on;
   location  / {
     proxy_buffering  off;
-    proxy_pass  http://interl_ip_to_guacamole:8080/;
+    proxy_pass  http://$stack_ip:8080/guacamole/;
   }
 }
 
@@ -193,7 +193,7 @@ server  {
   server_name  pms.${domain};
   ssl  on;
   location  / {
-    proxy_pass  http://internal_ip_to_plex:32400/;
+    proxy_pass  http://$stack_ip:32400/;
   }
 }
 
@@ -203,7 +203,7 @@ server {
   ssl  on;
   client_max_body_size  256m;
   location  / {
-    proxy_pass  http://internal_ip_to_stash:7990;
+    proxy_pass  http://$stack_ip:7990;
     proxy_set_header  X-Forwarded-Host \$host;
     proxy_set_header  X-Forwarded-Server \$host;
     proxy_set_header  X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -226,7 +226,7 @@ firewall-cmd --permanent --add-service=https
 
 # Reboot
 echo 'Rebooting...'
-# systemctl reboot
+systemctl reboot
 
 # Don't forget to forward port 443 on your firewall,
 # and set up dns entries with your dns provider

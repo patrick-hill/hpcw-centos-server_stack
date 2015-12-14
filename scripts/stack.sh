@@ -25,7 +25,7 @@ install_sickrage=false
 install_headphones=false
 install_sonarr=false
 
-reboot=false
+reboot=true
 
 #################################################
 #				PREREQUISITES					#
@@ -264,11 +264,12 @@ if [ $install_guacamole == true ]; then
 	# prerequisites
 	# EPEL Repo
 	rpm -Uvh http://mirror.metrocast.net/fedora/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-	yum -y install wget
+	
 	# Felfert Repo
 	wget http://download.opensuse.org/repositories/home:/felfert/Fedora_19/home:felfert.repo && mv home\:felfert.repo /etc/yum.repos.d/
-	yum -y install tomcat libvncserver freerdp libvorbis libguac libguac-client-vnc libguac-client-rdp libguac-client-ssh
-	yum -y install cairo-devel pango-devel libvorbis-devel openssl-devel gcc pulseaudio-libs-devel libvncserver-devel terminus-fonts \
+	# yum -y install wget
+	yum -y install tomcat libvncserver freerdp libvorbis libguac libguac-client-vnc libguac-client-rdp libguac-client-ssh \
+	cairo-devel pango-devel libvorbis-devel openssl-devel gcc pulseaudio-libs-devel libvncserver-devel terminus-fonts \
 	freerdp-devel uuid-devel libssh2-devel libtelnet libtelnet-devel tomcat-webapps tomcat-admin-webapps java-1.7.0-openjdk.x86_64
 	
 	# guacd install
@@ -289,7 +290,7 @@ if [ $install_guacamole == true ]; then
 	
 	# mysql authentication
 	yum -y install mariadb mariadb-server
-	mkdir -p ~/guacamole/sqlauth && cd ~/guacamole/sqlauth
+	mkdir -p /home/vagrant/guacamole/sqlauth && cd /home/vagrant/guacamole/sqlauth
 	wget http://sourceforge.net/projects/guacamole/files/current/extensions/guacamole-auth-jdbc-0.9.7.tar.gz
 	tar -zxf guacamole-auth-jdbc-0.9.7.tar.gz
 	wget http://dev.mysql.com/get/Downloads/Connector/j/mysql-connector-java-5.1.32.tar.gz
@@ -299,28 +300,29 @@ if [ $install_guacamole == true ]; then
 	mv mysql-connector-java-5.1.32/mysql-connector-java-5.1.32-bin.jar /usr/share/tomcat/.guacamole/lib/
 	systemctl restart mariadb.service
 	
-	# # configure database
-	# mysqladmin -u root password password
-	# # Enter above password
-	# mysql -u root -p vagrant
-	# create database guacdb;
-	# create user 'guacuser'@'localhost' identified by 'guacDBpass';
-	# grant select,insert,update,delete on guacdb.* to 'guacuser'@'localhost';
-	# flush privileges;
-	# quit
+	exit 0
+	# TODO FIX THIS!!!
+	
 	
 	# configure database
 	mysqladmin -u root password password
-	Q1="create database guacdb;"
-	Q2="create user 'guacuser'@'localhost' identified by 'guacDBpass';"
-	Q3="grant select,insert,update,delete on guacdb.* to 'guacuser'@'localhost';"
-	Q4="FLUSH PRIVILEGES;"
-	SQL="${Q1}${Q2}${Q3}${Q4}"
-	mysql -u root -p password -e ${SQL}
+	cd ~
+	cat >sql.sql <<EOL
+create database guacdb;
+create user 'guacuser'@'localhost' identified by 'guacDBpass';
+grant select,insert,update,delete on guacdb.* to 'guacuser'@'localhost';
+flush privileges;
+quit
+EOL
+	# Enter above password
+	mysql -u root --password='password' < sql.sql
+	# Remove temp file
+	rm sql.sql
 	
 	# extend database schema
-	cd ~/guacamole/sqlauth/guacamole-auth-jdbc-0.9.7/mysql/schema/
-	cat ./*.sql | mysql -u root -p guacdb   # Enter SQL root password set above
+	cd /home/vagrant/guacamole/sqlauth/guacamole-auth-jdbc-0.9.7/mysql/schema/
+	# Enter SQL root password set above
+	cat ./*.sql | mysql -u root --password='password' guacdb   
 	
 	# configure guacamole
 	mkdir -p /etc/guacamole/
@@ -333,7 +335,7 @@ mysql-username: guacuser
 mysql-password: guacDBpass
 
 # Additional settings
-mysql-disallow-duplicate-connections: false	
+mysql-disallow-duplicate-connections: false
 EOL
 	ln -s /etc/guacamole/guacamole.properties /usr/share/tomcat/.guacamole/
 	
