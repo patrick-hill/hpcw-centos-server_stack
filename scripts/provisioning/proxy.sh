@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 
 this=`basename "$0"`
+useScript=false
+if [ $useScript == false ]; then
+    echo "Not running script: $this"
+    exit 0
+fi
+
 echo "Executing Script: $this"
 
 # VBox Fix
@@ -16,8 +22,9 @@ domain='proxy.hpcw.com'
 # https://deviantengineer.com/2015/05/nginx-reverseproxy-centos7/
 
 # walkthrough for installing Nginx, and configuring it as a reverse proxy.
-# Should use a self-signed wild card SSL and access all services through this without putting those services directly on the internet
-# Can use for Guacamole, SABnzbd/SickBeard/CouchPotatoServer/Headphones, SubSonic, Plex Media Server, and Owncloud.
+# Should use a self-signed wild card SSL and access all services through this without putting those
+# services directly on the internet
+# Can use for Guacamole, SABnzbd/SickBeard/CouchPotatoServer/Headphones/SubSonic/Plex Media Server/Owncloud.
 
 # For clarity, I will be running Nginx as a user called nginx.
 # SELinux will be disable, and firewalld will be configured to only allow inbound 22 and 443 traffic (only 443 will be available on the internet).

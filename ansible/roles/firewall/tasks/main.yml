@@ -1,0 +1,13 @@
+---
+# firewalld Settings
+- name:     Enable firewall service and set to enabled
+  command:  systemctl enable firewalld.service
+    
+- name:     Enable firewall
+  command:  systemctl start firewalld
+
+- name:     Add http in firewalld
+  command:  firewall-cmd --permanent --add-service=http
+
+- name:     Add https in firewalld
+  command:  firewall-cmd --permanent --add-service=https

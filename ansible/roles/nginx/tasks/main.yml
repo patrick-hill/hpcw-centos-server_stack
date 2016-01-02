@@ -1,0 +1,77 @@
+---
+- name:     Add nginx Dependency extras Part 1
+  yum:      name=yum-utils state=latest
+
+- name:     Add nginx Dependency extras Part 2
+  command:  yum-config-manager --enable cr
+
+- name:     Install nginx
+  yum:      name=nginx state=latest
+
+- name:     Add nginx user
+  user:     name=nginx password=welcome1
+
+- name:     Backup nginx.conf before setting template
+  command:  cp -f /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
+
+- name:     Remove original nginx.conf
+  command:  rm -f /etc/nginx/nginx.conf
+
+- name:     Register conf file
+  stat:     path=/etc/nginx/nginx.conf
+  register: nginx_conf_exists
+
+- name: Copy nginx configuration in place.
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+    validate: 'nginx -t -c %s'
+    force: yes
+  notify:
+    - restart nginx
+  when: not nginx_conf_exists.stat.exists
+
+- name:     Link to home
+  file:
+    src:    /etc/nginx/nginx.conf
+    dest:   /home/{{ user_home }}/nginx.conf
+    state:  link
+    force:  yes
+
+- name:     Register reverse proxy file
+  stat:     path=/etc/nginx/conf.d/reverseproxy.conf
+  register: nginx_reverse_proxy_exists
+
+- name: Copy nginx reverse proxy config in place.
+  template:
+    src: reverseproxy.conf.j2
+    dest: /etc/nginx/conf.d/reverseproxy.conf
+    owner: root
+    group: root
+    mode: 0644
+    force: yes
+#   validate: 'nginx -t -c %s'
+  notify:
+    - restart nginx
+  when: not nginx_reverse_proxy_exists.stat.exists
+
+- name:     Link to home
+  file:
+    src:    /etc/nginx/conf.d/reverseproxy.conf
+    dest:   /home/{{ user_home }}/reverseproxy.conf
+    state:  link
+    force:  yes
+
+- name: Ensure nginx is started and enabled to start at boot.
+  service: name=nginx state=started enabled=yes
+
+- name:     Symlink conf to home
+  file:
+    src: /etc/nginx/conf.d/reverseproxy.conf
+    dest: /home/phill/reverseproxy.conf
+    state: link
+    force: yes
+

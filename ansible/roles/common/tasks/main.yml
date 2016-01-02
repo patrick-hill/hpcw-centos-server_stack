@@ -1,0 +1,21 @@
+---
+- name: Creating groups
+  group: name=admins state=present
+
+- name: Create Users - phill
+  user: name=phill comment=AdminGod group=admins password={{ password }} state=present
+  
+- name: Fix VBox file sharing
+  file:
+    src: /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions
+    dest: /usr/lib/VBoxGuestAdditions
+    state: link
+    force: yes
+
+- name:     Disable SELinux for testing ease
+  command:  sed -i /etc/selinux/config -r -e 's/^SELINUX=.*/SELINUX=disabled/g'
+
+- name:     Install EPEL repo
+  yum:      name=epel-release state=latest update_cache=yes
+
+    

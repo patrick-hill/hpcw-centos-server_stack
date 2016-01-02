@@ -1,0 +1,5 @@
+---
+proxy_domain: hpcw.com
+stack_server_ip: 192.168.125.6
+user_home: vagrant
+

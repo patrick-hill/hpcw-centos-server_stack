@@ -1,0 +1,20 @@
+---
+- name:     Remove ssl dir
+  command:  rm -rf {{ ssl_dir }}
+  ignore_errors: yes
+  
+- name:     Create ssl dir
+  command:  mkdir -p {{ ssl_dir }}
+
+- name:     Generate key
+  command:  openssl genrsa -des3 -passout pass:welcome1 -out {{ ssl_dir }}/server.key 2048 -noout
+
+- name:     Remove passphrase from key     
+  command:  openssl rsa -in {{ ssl_dir }}/server.key -passin pass:welcome1 -out {{ ssl_dir }}/server.key  
+
+- name:     Generating CSR (Certificate Signing Request)     
+  command:  openssl req -new -key {{ ssl_dir }}/server.key -out {{ ssl_dir }}/server.csr -passin pass:welcome1 -subj "/C=US/ST=IOWA/L=America/O=HillsPCWorld/OU=IT/CN=HPCW/emailAddress=Hill@HillsPCWorld.com"
+    
+- name:     Generating self signed cert     
+  command:  openssl x509 -req -days 365 -in {{ ssl_dir }}/server.csr -signkey {{ ssl_dir }}/server.key -passin pass:welcome1 -out {{ ssl_dir }}/server.crt
+

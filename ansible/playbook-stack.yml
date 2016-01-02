@@ -1,0 +1,27 @@
+---
+- hosts: stack
+  gather_facts: no
+  sudo: true
+  vars:
+    - password: $6$rounds=656000$B/OzGPN5bfVkA8l9$yAKugT8qHocV7DmqzaMZSMzkwRgNO2j8H0tQaCyQIDottPgT8lZKHoXSZLZTX9o9d4c7qbS50DBC8wfCh3K0g1
+
+  pre_tasks:
+    - name:     Disable Firewall :)
+      command:  systemctl disable firewalld.service && systemctl stop firewalld.service
+      
+    - name:     Create usenet user
+      user:     name=usenet
+    
+    - name:     RPMFusion Repo
+      yum:      name=http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el7.rf.x86_64.rpm state=present
+      
+  roles:
+    - common
+    - openssl
+    - sabnzbd
+    
+  post_tasks:
+    - name: Reboot system
+      raw: /sbin/shutdown -r 1
+      changed_when: True
+  

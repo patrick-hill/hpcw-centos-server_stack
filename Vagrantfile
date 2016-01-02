@@ -27,7 +27,7 @@ HOSTS = [
       # {:g => 80, :h => 8080 }
     ],
     # Alternative :( DNS: http://awesomeprogrammer.com/blog/2014/12/07/vagrant-setup-for-multiple-subdomains-application/
-    :host_alias => 'proxy.hpcw.com sab.proxy.hpcw.com guac.proxy.hpcw.com', 
+    :host_alias => 'proxy.hpcw.com sab.hpcw.com guac.hpcw.com', 
   },
   {
     :name   => 'stack',
@@ -36,7 +36,6 @@ HOSTS = [
     :eth1   => STACK_IP,
     :box    => BOX,
     :ports  => [
-      {:g => 3389, :h => 3389}, # RDP-Windows
       {:g => 8080, :h => 8080}, # sabnzbd
       {:g => 8081, :h => 8081}, # sickrage
       {:g => 5050, :h => 5050}, # couchpotato
@@ -73,11 +72,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       end
     
       # Provisioning
-      config.vm.provision "shell", path: "scripts/#{opts[:name]}.sh", args: STACK_IP
-      # config.vm.provision :ansible do |ansible|
-      #   ansible.verbose = "v"                         # Tells vagrant to display ansible command used
-      #   ansible.playbook = "ansible/#{name}.yml"
-      # end
+      # config.vm.provision "shell", path: "scripts/provisioning/#{opts[:name]}.sh", args: STACK_IP
+      config.vm.provision :ansible do |ansible|
+        ansible.verbose = "v"                         # Tells vagrant to display ansible command used
+        ansible.playbook = "ansible/playbook-#{opts[:name]}.yml"
+      end
       
     end # END define
   end # HOSTS-each

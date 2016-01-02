@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
 this=`basename "$0"`
+useScript=true
+if [ $useScript == false ]; then
+    echo "Not running script: $this"
+    exit 0
+fi
 echo "Executing Script: $this"
 
 # VBox Fix
@@ -16,8 +21,8 @@ sudo ln -s /opt/VBoxGuestAdditions-4.3.10/lib/VBoxGuestAdditions /usr/lib/VBoxGu
 
 
 # Script installs the following software if set to true:
-install_sabnzbd=false
-install_guacamole=true
+install_sabnzbd=true
+install_guacamole=false
 
 install_couchpotato=false
 install_sickrage=false

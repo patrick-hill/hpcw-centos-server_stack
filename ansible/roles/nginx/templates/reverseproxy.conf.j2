@@ -1,0 +1,110 @@
+ssl_certificate  /apps/ssl/server.crt;   # Replace with your cert info (I generate my own self-signed certs with openssl)
+ssl_certificate_key  /apps/ssl/server.key;   # Replace with your cert info (I generate my own self-signed certs with openssl)
+ssl_session_timeout  5m;
+ssl_prefer_server_ciphers  on;
+ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+ssl_ciphers  AES256+EECDH:AES256+EDH:!aNULL;
+
+server  {
+  listen  80;   # Redirect any port http/80 requests, to https/443 -- generally only matters for internal requests
+  server_name  *.{{ proxy_domain }};
+  return 301 https://$host$request_uri;
+}
+
+server  {
+  listen  443 ssl;   # Return 404 page if requesting the root url; can set this to whatever you want, but I just leave this at a 404
+  server_name {{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass http://www.google.com;
+    #return  404;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for SABnzbd, browsable at https://sab.domain.com
+  server_name  sab.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:8080/;
+  }
+}
+
+
+server  {
+  listen  443 ssl;   # Example config for SubSonic, browsable at https://subsonic.domain.com
+  server_name  subsonic.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:4040/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for OwnCloud, browsable at https://owncloud.domain.com
+  server_name  owncloud.{{ proxy_domain }};
+  client_max_body_size  0;
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for SickRage, browsable at https://sr.domain.com
+  server_name  sr.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:8081/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for CouchPotatoServer, browsable https://cps.domain.com
+  server_name  cps.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:5050/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for Headphones, browsable at https://hp.domain.com
+  server_name  hp.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:9090/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for Guacamole, browsable at https://guac.domain.com/guacamole
+  server_name  guac.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_buffering  off;
+    proxy_pass  http://{{ stack_server_ip }}:8080/guacamole/;
+  }
+}
+
+server  {
+  listen  443 ssl;   # Example config for Plex Media Server, browsable at https://pms.domain.com/web
+  server_name  pms.{{ proxy_domain }};
+  ssl  on;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:32400/;
+  }
+}
+
+server {
+  listen  443 ssl;    # Example config for Stash, browsable at https://git.domain.com
+  server_name  git.{{ proxy_domain }};
+  ssl  on;
+  client_max_body_size  256m;
+  location  / {
+    proxy_pass  http://{{ stack_server_ip }}:7990;
+    proxy_set_header  X-Forwarded-Host $host;
+    proxy_set_header  X-Forwarded-Server $host;
+    proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
