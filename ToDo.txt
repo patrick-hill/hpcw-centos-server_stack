@@ -1,0 +1,10 @@
+Use this file to track what/where you were last in case of long break again....
+
+
+
+
+2016-01-04
+Proxy: Is ironed out with homepage frontend in the works
+Stack: Currently working on finalizing sabnzbd role while others are created none are 100% finished :(
+
+Still working on how to mount FreeNAS shares to each VM "automatically" so they are persisted after a reboot of the VM...

@@ -1,0 +1,26 @@
+---
+
+yum -y update
+yum -y install transmission transmission-daemon
+service transmission-daemon start
+
+# config file: /var/lib/transmission/.config/transmission/settings.json
+"rpc-whitelist": "127.0.0.1",
+"rpc-whitelist-enabled": true,
+
+
+
+
+
+# Source: https://elijahpaul.co.uk/script-install-for-transmission-2-83-seedbox-on-centos-6-5/
+# - name:     Download install script
+#   command:  wget https://github.com/elijahpaul/install-transmission/raw/master/install-transmission.sh
+
+# - name:     Set script as executable
+#   command:  chmod u+x install-transmission.sh
+
+# - name:     Run script
+#   command:  install-transmission.sh
+
+
+

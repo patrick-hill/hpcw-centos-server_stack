@@ -18,4 +18,10 @@
 - name:     Install EPEL repo
   yum:      name=epel-release state=latest update_cache=yes
 
-    
+- name: Install common packages
+  yum:  pkg={{ item }} state=installed
+  with_items:
+    - git
+    - wget
+    - nfs-utils
+    - nfs-utils-lib

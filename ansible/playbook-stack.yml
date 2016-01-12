@@ -11,14 +11,20 @@
       
     - name:     Create usenet user
       user:     name=usenet
-    
-    - name:     RPMFusion Repo
-      yum:      name=http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el7.rf.x86_64.rpm state=present
+      
+      # yum -y install nfs-utils autofs
+      # mkdir /Hills_Shared
+      # echo "/Hills_Shared /etc/auto.hills-shared --timeout=600 --ghost" > /etc/auto.master
+      # echo "Hills_Shared -fstype=nfs,rw 10.0.0.150:/Hills_Shared" > /etc/auto.hills-shared
+      # service autofs restart
+      # chkconfig autofs on
+      # 
       
   roles:
     - common
     - openssl
     - sabnzbd
+    # - sickrage
     
   post_tasks:
     - name: Reboot system

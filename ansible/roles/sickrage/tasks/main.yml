@@ -1,0 +1,24 @@
+---
+- name: Install Requirements
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - python-cheetah
+    - python-setproctitle
+
+- name: Get SickBeard Code from GitHub
+  git:  repo=https://github.com/SickRage/SickRage.git
+        dest=/apps/sickbeard
+        version=master
+
+- name: Set dir owner
+  file: path=/apps/sickbeard owner=usenet
+        group=usenet recurse=yes
+
+- name: Add service
+  copy: src=sickrage.service
+        dest=/etc/systemd/system/
+        owner=root group=root mode=0644
+
+- name:     enable SAB service
+  service:  name=sickrage.service enabled=yes state=started
+  

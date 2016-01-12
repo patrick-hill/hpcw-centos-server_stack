@@ -13,6 +13,24 @@
     - firewall
 
   post_tasks:
+    # Setup Proxy Homepage
+    - name:     Create site dir's
+      command:  sudo mkdir -p /var/www/proxy.hpcw.com/
+    
+    - name: Clone template
+      git:  repo=https://github.com/IronSummitMedia/startbootstrap-4-col-portfolio.git
+              dest=/vagrant/public_html
+            #   dest=/var/www/proxy.hpcw.com/public_html
+
+    - name:     Site shortcut
+      command:  sudo ln -s /vagrant/public_html /var/www/proxy.hpcw.com/public_html
+
+    - name:     Set owner
+      command:  sudo chown -R nginx:nginx /vagrant/public_html
+
+    - name:     Set perms
+      command:  sudo chmod 755 /var/www
+
     - name: Reboot system
       raw: /sbin/shutdown -r 1
       changed_when: True

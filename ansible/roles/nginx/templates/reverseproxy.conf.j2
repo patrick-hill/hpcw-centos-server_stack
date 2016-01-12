@@ -16,8 +16,8 @@ server  {
   server_name {{ proxy_domain }};
   ssl  on;
   location  / {
-    proxy_pass http://www.google.com;
-    #return  404;
+    root   /var/www/proxy.hpcw.com/public_html/;
+    index  index.html index.htm;
   }
 }
 

@@ -1,5 +1,6 @@
 [SABnzbd]
-name = SABnzbd for RHEL 7 and clones - Base
-baseurl = https://dl.dropboxusercontent.com/u/14500830/SABnzbd/RHEL-CentOS/7/
-enabled = 0
-gpgcheck = 0
+name=SABnzbd for RHEL 7 and clones - Base
+baseurl=https://dl.dropboxusercontent.com/u/14500830/SABnzbd/RHEL-CentOS/7/
+failovermethod=priority
+enabled=1
+gpgcheck=0
